@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Đăng nhập JWT - Quản lý khóa học</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f5f9;
+            margin: 0;
+            padding: 35px;
+            color: #202938
+        }
+
+        .box {
+            max-width: 720px;
+            margin: auto;
+            background: white;
+            padding: 26px;
+            border-radius: 12px;
+            box-shadow: 0 4px 18px #0001
+        }
+
+        input,
+        button {
+            padding: 10px;
+            margin: 6px 0;
+            width: 100%;
+            box-sizing: border-box
+        }
+
+        button {
+            cursor: pointer;
+            background: #2457d6;
+            color: white;
+            border: 0;
+            border-radius: 6px
+        }
+
+        pre {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            background: #f3f5f9;
+            padding: 12px;
+            border-radius: 6px
+        }
+
+        .hint {
+            color: #555;
+            font-size: 14px
+        }
+    </style>
+</head>
+
+<body>
+    <div class="box">
+        <h2>Đăng nhập hệ thống quản lý khóa học</h2>
+        <p class="hint">Tài khoản demo: <b>user / user123</b> hoặc <b>admin / admin123</b></p>
+        <form id="loginForm"><label>Tài khoản</label><input id="username" required autocomplete="username"><label>Mật
+                khẩu</label><input id="password" type="password" required autocomplete="current-password"><button
+                type="submit">Đăng nhập và nhận JWT</button></form>
+        <p id="loginStatus"></p>
+        <h3>Gọi API bằng JWT đã nhận</h3><button onclick="callApi('/api/user/profile')">Gọi API USER</button><button
+            onclick="callApi('/api/admin/dashboard')">Gọi API ADMIN</button><button onclick="logout()">Đăng xuất / xóa
+            JWT</button>
+        <h3>Kết quả server</h3>
+        <pre id="result">Chưa có kết quả.</pre>
+    </div>
+    <script>
+        let jwtToken = '';
+        const result = document.getElementById('result');
+        document.getElementById('loginForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            try {
+                const response = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: document.getElementById('username').value, password: document.getElementById('password').value }) }); const data = await response.json();
+                if (response.ok) { jwtToken = data.token; document.getElementById('loginStatus').textContent = 'Đăng nhập thành công. Role: ' + data.role + '. JWT đã lưu trong bộ nhớ trang.'; } else { jwtToken = ''; document.getElementById('loginStatus').textContent = 'Đăng nhập thất bại.'; } result.textContent = JSON.stringify(data, null, 2);
+            } catch (err) { result.textContent = 'Không gọi được server: ' + err; }
+        });
+        async function callApi(path) { try { const response = await fetch(path, { headers: jwtToken ? { Authorization: 'Bearer ' + jwtToken } : {} }); const data = await response.json(); result.textContent = 'HTTP ' + response.status + '\n' + JSON.stringify(data, null, 2); } catch (err) { result.textContent = 'Lỗi gọi API: ' + err; } }
+        function logout() { jwtToken = ''; document.getElementById('loginStatus').textContent = 'Đã xóa JWT khỏi bộ nhớ trang.'; result.textContent = 'Bạn đã đăng xuất.'; }
+    </script>
+</body>
+
+</html>
